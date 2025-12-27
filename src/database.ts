@@ -32,10 +32,27 @@ export async function initDb() {
       left_at TEXT,
       is_banned BOOLEAN DEFAULT 0,
       banned_at TEXT,
+      warning_count INTEGER DEFAULT 0,
+      last_warning_at TEXT,
       lang TEXT DEFAULT "en",
       is_admin BOOLEAN DEFAULT 0
     )
   `);
+
+  const userColumns: Array<{ name: string }> = await db.all(
+    "PRAGMA table_info(users)",
+  );
+  const userColumnNames = new Set(userColumns.map((col) => col.name));
+
+  if (!userColumnNames.has("warning_count")) {
+    await db.exec(
+      "ALTER TABLE users ADD COLUMN warning_count INTEGER DEFAULT 0",
+    );
+  }
+
+  if (!userColumnNames.has("last_warning_at")) {
+    await db.exec("ALTER TABLE users ADD COLUMN last_warning_at TEXT");
+  }
 
   // Create settings table
   await db.exec(`
@@ -170,8 +187,9 @@ export async function markUserJoined(telegramId: number) {
 export async function markUserLeft(telegramId: number) {
   const now = new Date().toISOString();
   return db.run(
-    "UPDATE users SET joined = 0, left_at = ? WHERE telegram_id = ?",
+    "UPDATE users SET joined = 0, left_at = ?, warning_count = 0, last_warning_at = ? WHERE telegram_id = ?",
     now,
+    null,
     telegramId,
   );
 }
@@ -191,6 +209,23 @@ export async function markUserUnbanned(telegramId: number) {
     null,
     telegramId,
   );
+}
+
+export async function updateUserWarnings(
+  telegramId: number,
+  warningCount: number,
+  lastWarningAt: string | null,
+) {
+  return db.run(
+    "UPDATE users SET warning_count = ?, last_warning_at = ? WHERE telegram_id = ?",
+    warningCount,
+    lastWarningAt,
+    telegramId,
+  );
+}
+
+export async function resetUserWarnings(telegramId: number) {
+  return updateUserWarnings(telegramId, 0, null);
 }
 
 export async function makeAdmin(telegramId: number) {

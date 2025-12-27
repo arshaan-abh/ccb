@@ -31,6 +31,16 @@ Your current balance is below the minimum threshold for access.
 Required: {0} | Your Balance: {1}
   `,
 
+  warningLowBalance: `
+⚠️  Balance Warning  ⚠️
+
+Your current balance is below the required minimum.
+
+Required: {0} | Your Balance: {1}
+
+This is warning {2}/3. You will be removed {3} after the third warning if your balance is not restored.
+  `,
+
   inviteSent: `
 🎉  Access Granted Successfully!  🎉
 
@@ -350,6 +360,16 @@ export const messages_fa: Record<keyof typeof messages_en, string> = {
 موجودی شما کمتر از حداقل لازم برای دسترسی است.
 
 مقدار مورد نیاز: {0} | موجودی شما: {1}
+  `,
+
+  warningLowBalance: `
+⚠️  هشدار موجودی  ⚠️
+
+موجودی شما کمتر از حداقل لازم است.
+
+مقدار مورد نیاز: {0} | موجودی شما: {1}
+
+این هشدار {2}/3 است. اگر موجودی شما برنگردد، {3} بعد از هشدار سوم حذف خواهید شد.
   `,
 
   inviteSent: `

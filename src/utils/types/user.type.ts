@@ -13,5 +13,7 @@ export type TUser = {
   is_admin: boolean;
   is_banned: boolean;
   banned_at: string | null;
+  warning_count: number;
+  last_warning_at: string | null;
   lang: "fa" | "en";
 };
