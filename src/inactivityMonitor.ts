@@ -10,8 +10,7 @@ type AdminRecipient = {
   lang: "fa" | "en";
 };
 
-function parseAdminIds(): number[] {
-  const raw = process.env.ADMIN_IDS;
+function parseIdArray(raw: string | undefined): number[] {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -22,6 +21,14 @@ function parseAdminIds(): number[] {
   } catch {
     return [];
   }
+}
+
+function parseAdminIds(): number[] {
+  return parseIdArray(process.env.ADMIN_IDS);
+}
+
+function parseSuperAdminIds(): number[] {
+  return parseIdArray(process.env.SUPER_ADMIN_IDS);
 }
 
 function buildIsAdminContext(
@@ -52,6 +59,22 @@ async function getAdminRecipients(): Promise<AdminRecipient[]> {
     if (isAdmin(ctx)) {
       recipients.push({ id, lang: user?.lang || "en" });
     }
+  }
+
+  return recipients;
+}
+
+async function getSuperAdminRecipients(): Promise<AdminRecipient[]> {
+  const users = await db.getUsersWithTelegramId();
+  const usersById = new Map<number, TUser>();
+  for (const user of users) {
+    usersById.set(user.telegram_id, user);
+  }
+
+  const recipients: AdminRecipient[] = [];
+  for (const id of parseSuperAdminIds()) {
+    const user = usersById.get(id);
+    recipients.push({ id, lang: user?.lang || "en" });
   }
 
   return recipients;
@@ -133,6 +156,23 @@ async function checkInactivity(bot: Telegraf<any>) {
       console.error(
         new Date().toString(),
         `Could not warn admin ${recipient.id}:`,
+        error,
+      );
+    }
+  }
+
+  const superRecipients = await getSuperAdminRecipients();
+  for (const recipient of superRecipients) {
+    const duration = formatDuration(recipient.lang, inactiveMinutes);
+    try {
+      await bot.telegram.sendMessage(
+        recipient.id,
+        i18n(recipient.lang, "inactivityWarningSuperAdmin", duration),
+      );
+    } catch (error) {
+      console.error(
+        new Date().toString(),
+        `Could not warn super admin ${recipient.id}:`,
         error,
       );
     }

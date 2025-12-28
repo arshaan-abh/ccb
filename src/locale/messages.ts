@@ -49,6 +49,14 @@ No non-admin users have started the bot for {0}.
 This warning repeats every {1} until activity resumes.
   `,
 
+  inactivityWarningSuperAdmin: `
+⚠️  Bot Inactivity Alert (Super Admin)  ⚠️
+
+This bot has been inactive for {0}.
+
+Do you want to shut it down?
+  `,
+
   inviteSent: `
 🎉  Access Granted Successfully!  🎉
 
@@ -386,6 +394,14 @@ export const messages_fa: Record<keyof typeof messages_en, string> = {
 هیچ کاربر غیرادمینی برای {0} ربات را شروع نکرده است.
 
 این هشدار هر {1} تکرار می‌شود تا فعالیت از سر گرفته شود.
+  `,
+
+  inactivityWarningSuperAdmin: `
+⚠️  هشدار عدم فعالیت ربات (سوپر ادمین)  ⚠️
+
+این ربات برای {0} غیرفعال بوده است.
+
+آیا می‌خواهید آن را متوقف کنید؟
   `,
 
   inviteSent: `
