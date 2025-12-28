@@ -138,6 +138,32 @@ export async function initDb() {
     );
   }
 
+  const lastNonAdminStartAt = await db.get(
+    "SELECT value FROM settings WHERE key = ?",
+    "last_non_admin_start_at",
+  );
+
+  if (!lastNonAdminStartAt) {
+    await db.run(
+      "INSERT INTO settings (key, value) VALUES (?, ?)",
+      "last_non_admin_start_at",
+      new Date().toISOString(),
+    );
+  }
+
+  const lastInactivityWarningAt = await db.get(
+    "SELECT value FROM settings WHERE key = ?",
+    "last_inactivity_warning_at",
+  );
+
+  if (!lastInactivityWarningAt) {
+    await db.run(
+      "INSERT INTO settings (key, value) VALUES (?, ?)",
+      "last_inactivity_warning_at",
+      null,
+    );
+  }
+
   console.log(new Date().toString(), "Database initialized");
   return db;
 }
@@ -314,6 +340,40 @@ export async function setWelcomeMessage(lang: "fa" | "en", value: string) {
     "UPDATE settings SET value = ? WHERE key = ?",
     value,
     `welcome_message_${lang}`,
+  );
+}
+
+export async function getLastNonAdminStartAt(): Promise<string | null> {
+  const result = await db.get(
+    "SELECT value FROM settings WHERE key = ?",
+    "last_non_admin_start_at",
+  );
+  return result?.value ?? null;
+}
+
+export async function setLastNonAdminStartAt(value: string) {
+  return db.run(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    "last_non_admin_start_at",
+    value,
+  );
+}
+
+export async function getLastInactivityWarningAt(): Promise<string | null> {
+  const result = await db.get(
+    "SELECT value FROM settings WHERE key = ?",
+    "last_inactivity_warning_at",
+  );
+  return result?.value ?? null;
+}
+
+export async function setLastInactivityWarningAt(value: string | null) {
+  return db.run(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    "last_inactivity_warning_at",
+    value,
   );
 }
 

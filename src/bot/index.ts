@@ -27,6 +27,7 @@ import { editVipInfoCommandHandler } from "./commands/editVipInfoCommandHandler"
 import { broadcastMessageHandler } from "./commands/broadcastMessageHandler";
 import { broadcastCommandHandler } from "./commands/broadcastCommandHandler";
 import { chatJoinRequest } from "./commands/chatJoinRequest";
+import { isAdmin } from "./helpers/isAdmin";
 
 export type UserState =
   | "AWAITING_CONTACT"
@@ -60,7 +61,14 @@ export function createBot(token: string) {
   bot.use(async (ctx, next) => middleware(ctx, next));
 
   // Start command
-  bot.start((ctx) => setLangHandler(ctx, userState));
+  bot.start(async (ctx) => {
+    if (ctx.chat?.type === "private" && !isAdmin(ctx)) {
+      await db.setLastNonAdminStartAt(new Date().toISOString());
+      await db.setLastInactivityWarningAt(null);
+    }
+
+    await setLangHandler(ctx, userState);
+  });
 
   // Admin commands
   bot.command("setthreshold", async (ctx) => setthreshholdHandler(ctx));

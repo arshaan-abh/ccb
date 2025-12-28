@@ -3,6 +3,7 @@ import { createBot } from "./bot";
 import { setupBalanceSync } from "./loop";
 import { consts } from "./utils/consts";
 import { setupChannelSync } from "./channelSync";
+import { setupInactivityMonitor } from "./inactivityMonitor";
 
 async function main() {
   while (true) {
@@ -18,6 +19,9 @@ async function main() {
 
       // Setup balance sync
       setupBalanceSync(bot);
+
+      // Setup inactivity warnings
+      setupInactivityMonitor(bot);
 
       // Start bot with retry logic
       const MAX_RETRIES = 10;

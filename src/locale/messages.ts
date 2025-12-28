@@ -41,6 +41,14 @@ Required: {0} | Your Balance: {1}
 This is warning {2}/3. You will be removed {3} after the third warning if your balance is not restored.
   `,
 
+  inactivityWarning: `
+⚠️  Bot Inactivity Alert  ⚠️
+
+No non-admin users have started the bot for {0}.
+
+This warning repeats every {1} until activity resumes.
+  `,
+
   inviteSent: `
 🎉  Access Granted Successfully!  🎉
 
@@ -370,6 +378,14 @@ export const messages_fa: Record<keyof typeof messages_en, string> = {
 مقدار مورد نیاز: {0} | موجودی شما: {1}
 
 این هشدار {2}/3 است. اگر موجودی شما برنگردد، {3} بعد از هشدار سوم حذف خواهید شد.
+  `,
+
+  inactivityWarning: `
+⚠️  هشدار عدم فعالیت ربات  ⚠️
+
+هیچ کاربر غیرادمینی برای {0} ربات را شروع نکرده است.
+
+این هشدار هر {1} تکرار می‌شود تا فعالیت از سر گرفته شود.
   `,
 
   inviteSent: `
