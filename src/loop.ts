@@ -10,8 +10,10 @@ export async function syncBalances(bot: Telegraf<any>) {
   try {
     console.log(new Date().toString(), "Starting balance sync...");
 
+    const syncStartTime = Date.now();
     let start = 0;
     let totalFetched = 0;
+    let syncFailed = false;
 
     while (true) {
       let res;
@@ -40,6 +42,7 @@ export async function syncBalances(bot: Telegraf<any>) {
             `API result not successful for start=${start}:`,
             res,
           );
+          syncFailed = true;
           break;
         }
       }
@@ -69,6 +72,28 @@ export async function syncBalances(bot: Telegraf<any>) {
       }
 
       start += 100;
+    }
+
+    const syncSucceeded = !syncFailed && totalFetched > 0;
+    if (syncSucceeded) {
+      await db.setLastSuccessfulBalanceSyncAt(new Date().toISOString());
+    }
+
+    const lastSuccessAt = await db.getLastSuccessfulBalanceSyncAt();
+    const lastSuccessMs = lastSuccessAt ? Date.parse(lastSuccessAt) : 0;
+    const isCurrentRun =
+      Number.isFinite(lastSuccessMs) && lastSuccessMs >= syncStartTime;
+
+    if (!syncSucceeded || !isCurrentRun) {
+      console.log(
+        new Date().toString(),
+        `Balance sync completed. Total users updated from API: ${totalFetched}`,
+      );
+      console.warn(
+        new Date().toString(),
+        "Skipping warnings and kicks because balance sync did not complete successfully.",
+      );
+      return;
     }
 
     // Check if any joined users are below threshold

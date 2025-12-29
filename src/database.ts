@@ -343,6 +343,23 @@ export async function setWelcomeMessage(lang: "fa" | "en", value: string) {
   );
 }
 
+export async function getLastSuccessfulBalanceSyncAt(): Promise<string | null> {
+  const result = await db.get(
+    "SELECT value FROM settings WHERE key = ?",
+    "last_successful_balance_sync_at",
+  );
+  return result?.value ?? null;
+}
+
+export async function setLastSuccessfulBalanceSyncAt(value: string) {
+  return db.run(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    "last_successful_balance_sync_at",
+    value,
+  );
+}
+
 export async function getLastNonAdminStartAt(): Promise<string | null> {
   const result = await db.get(
     "SELECT value FROM settings WHERE key = ?",
