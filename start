@@ -40,6 +40,7 @@ if [ -f "$ENV_FILE" ]; then
   case "$CONFIRM" in
     [yY][eE][sS]|[yY])
       echo "Overriding $ENV_FILE..."
+      force_prompt=true
       ;;
     *)
       echo "Skipping creation."
@@ -51,6 +52,22 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 if [ "$goto_env_ready" != true ]; then
+  if [ "$force_prompt" = true ]; then
+    BOT_TOKEN=""
+    CHANNEL_ID=""
+    API_KEY=""
+    API_SECRET=""
+    INVITE_LINK=""
+    DEFAULT_THRESHOLD=""
+    SYNC_INTERVAL_MINUTES=""
+    WARNING_INTERVAL_MINUTES=""
+    KICK_AFTER_WARNING_MINUTES=""
+    INACTIVITY_THRESHOLD_MINUTES=""
+    INACTIVITY_WARNING_INTERVAL_MINUTES=""
+    SUPER_ADMIN_IDS=""
+    ADMIN_IDS=""
+  fi
+
   # Prompt for required inputs with validation
   while [ -z "$BOT_TOKEN" ]; do
     read -p "BOT_TOKEN: " BOT_TOKEN
