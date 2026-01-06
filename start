@@ -25,7 +25,8 @@ fi
 
 ENV_FILE=".env.$NAME"
 LOG_DIR="logs"
-LOG_FILE="$LOG_DIR/$NAME.log"
+LOG_TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
+LOG_FILE="$LOG_DIR/${NAME}-${LOG_TIMESTAMP}.log"
 
 # Create logs directory if missing
 mkdir -p "$LOG_DIR"
