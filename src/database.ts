@@ -423,6 +423,38 @@ export async function getJoinedUsers(): Promise<TUser[]> {
   return db.all("SELECT * FROM users WHERE joined = 1");
 }
 
+export async function getJoinedUsersBelowThreshold(
+  threshold: number,
+): Promise<
+  Array<
+    Pick<
+      TUser,
+      "telegram_id" | "lang" | "spot_balance" | "contract_balance" | "warning_count" | "last_warning_at"
+    >
+  >
+> {
+  return db.all(
+    `SELECT telegram_id, lang, spot_balance, contract_balance, warning_count, last_warning_at
+     FROM users
+     WHERE joined = 1
+       AND (COALESCE(spot_balance, 0) + COALESCE(contract_balance, 0)) < ?`,
+    threshold,
+  );
+}
+
+export async function resetWarningsForJoinedUsersAboveThreshold(
+  threshold: number,
+) {
+  return db.run(
+    `UPDATE users
+     SET warning_count = 0, last_warning_at = NULL
+     WHERE joined = 1
+       AND (COALESCE(spot_balance, 0) + COALESCE(contract_balance, 0)) >= ?
+       AND (warning_count <> 0 OR last_warning_at IS NOT NULL)`,
+    threshold,
+  );
+}
+
 // Get all users with a non-null telegram_id
 export async function getUsersWithTelegramId(): Promise<TUser[]> {
   return db.all("SELECT * FROM users WHERE telegram_id IS NOT NULL");

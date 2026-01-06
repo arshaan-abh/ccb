@@ -23,38 +23,36 @@ export async function forceKickHandler(
 
   await ctx.reply("Starting force kick process...");
 
-  const users = await db.getJoinedUsers();
   const threshold = await db.getThreshold();
+  const users = await db.getJoinedUsersBelowThreshold(threshold);
   let kickedCount = 0;
 
   for (const user of users) {
-    if (db.getTotalBalance(user) < threshold) {
-      try {
-        // Kick user
-        await kickUserFromChannel(bot, user.telegram_id);
-        await db.markUserLeft(user.telegram_id);
-        kickedCount++;
+    try {
+      // Kick user
+      await kickUserFromChannel(bot, user.telegram_id);
+      await db.markUserLeft(user.telegram_id);
+      kickedCount++;
 
-        // Notify user
-        try {
-          await bot.telegram.sendMessage(
-            user.telegram_id,
-            i18n(lang, "kickedDueToBalance"),
-          );
-        } catch (notifyError) {
-          console.error(
-            new Date().toString(),
-            `Could not notify user ${user.telegram_id}:`,
-            notifyError,
-          );
-        }
-      } catch (kickError) {
+      // Notify user
+      try {
+        await bot.telegram.sendMessage(
+          user.telegram_id,
+          i18n(lang, "kickedDueToBalance"),
+        );
+      } catch (notifyError) {
         console.error(
           new Date().toString(),
-          `Error kicking user ${user.telegram_id}:`,
-          kickError,
+          `Could not notify user ${user.telegram_id}:`,
+          notifyError,
         );
       }
+    } catch (kickError) {
+      console.error(
+        new Date().toString(),
+        `Error kicking user ${user.telegram_id}:`,
+        kickError,
+      );
     }
   }
 

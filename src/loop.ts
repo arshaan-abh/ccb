@@ -97,11 +97,12 @@ export async function syncBalances(bot: Telegraf<any>) {
     }
 
     // Check if any joined users are below threshold
-    const users = await db.getJoinedUsers();
     const threshold = await db.getThreshold();
+    await db.resetWarningsForJoinedUsersAboveThreshold(threshold);
+    const users = await db.getJoinedUsersBelowThreshold(threshold);
     console.log(
       new Date().toString(),
-      `Checking ${users.length} joined users against threshold ${threshold}`,
+      `Checking ${users.length} joined users below threshold ${threshold}`,
     );
 
     const warnIntervalMinutes = parseInt(
@@ -135,24 +136,11 @@ export async function syncBalances(bot: Telegraf<any>) {
 
     for (const user of users) {
       try {
-        const updatedUser = await db.getUserByTelegramId(user.telegram_id);
-        if (!updatedUser) continue;
+        const totalBalance = db.getTotalBalance(user);
 
-        const totalBalance = db.getTotalBalance(updatedUser);
-
-        if (totalBalance >= threshold) {
-          if (
-            (updatedUser.warning_count ?? 0) > 0 ||
-            updatedUser.last_warning_at
-          ) {
-            await db.resetUserWarnings(user.telegram_id);
-          }
-          continue;
-        }
-
-        const warningCount = updatedUser.warning_count ?? 0;
-        const lastWarningAtMs = updatedUser.last_warning_at
-          ? Date.parse(updatedUser.last_warning_at)
+        const warningCount = user.warning_count ?? 0;
+        const lastWarningAtMs = user.last_warning_at
+          ? Date.parse(user.last_warning_at)
           : 0;
         const hasValidLastWarning =
           Number.isFinite(lastWarningAtMs) && lastWarningAtMs > 0;
@@ -163,7 +151,7 @@ export async function syncBalances(bot: Telegraf<any>) {
         if (warningCount < 3) {
           if (timeSinceLastWarning >= warnIntervalMs) {
             try {
-              const lang = updatedUser.lang || "en";
+              const lang = user.lang || "en";
               const removalDelay = formatDuration(
                 lang,
                 kickAfterWarningMinutes,
@@ -210,7 +198,7 @@ export async function syncBalances(bot: Telegraf<any>) {
         if (kicked) {
           await db.markUserLeft(user.telegram_id);
           try {
-            const lang = updatedUser.lang || "en";
+            const lang = user.lang || "en";
             await bot.telegram.sendMessage(
               user.telegram_id,
               lang === "fa"
