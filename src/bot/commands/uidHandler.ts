@@ -3,6 +3,7 @@ import * as db from "../../database";
 import { i18n } from "../../locale";
 import { mainMenuKeyboard } from "../../utils/main-menu-keyboard";
 import { createInviteLink } from "../helpers/createInviteLink";
+import { formatTimePeriod } from "../../utils/formatTimePeriod";
 
 export async function uidHandler(
   ctx: BotContext,
@@ -54,7 +55,11 @@ export async function uidHandler(
     const balance = db.getTotalBalance(ctx.user);
     if (balance >= threshold) {
       const link = await createInviteLink(bot, process.env.CHANNEL_ID!);
-      await ctx.reply(i18n(lang, "inviteSent", link), mainMenuKeyboard(lang));
+      const inviteExpireMinutes = 1;
+      await ctx.reply(
+        i18n(lang, "inviteSent", link, formatTimePeriod(lang, inviteExpireMinutes)),
+        mainMenuKeyboard(lang),
+      );
     } else {
       await ctx.reply(
         i18n(lang, "belowThreshold", threshold, balance),

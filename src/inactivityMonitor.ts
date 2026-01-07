@@ -4,6 +4,7 @@ import * as db from "./database";
 import { isAdmin } from "./bot/helpers/isAdmin";
 import { i18n } from "./locale";
 import { TUser } from "./utils/types/user.type";
+import { formatTimePeriod } from "./utils/formatTimePeriod";
 
 type AdminRecipient = {
   id: number;
@@ -80,17 +81,6 @@ async function getSuperAdminRecipients(): Promise<AdminRecipient[]> {
   return recipients;
 }
 
-function formatDuration(lang: string, minutes: number): string {
-  const safeMinutes = Number.isFinite(minutes) && minutes > 0 ? minutes : 1440;
-  if (safeMinutes % 60 === 0) {
-    const hours = safeMinutes / 60;
-    if (lang === "fa") return `${hours} ساعت`;
-    return `${hours} hour${hours === 1 ? "" : "s"}`;
-  }
-  if (lang === "fa") return `${safeMinutes} دقیقه`;
-  return `${safeMinutes} minute${safeMinutes === 1 ? "" : "s"}`;
-}
-
 async function checkInactivity(bot: Telegraf<any>) {
   const thresholdMinutes = parseInt(
     process.env.INACTIVITY_THRESHOLD_MINUTES || "1440",
@@ -139,14 +129,14 @@ async function checkInactivity(bot: Telegraf<any>) {
   if (recipients.length === 0) return;
 
   const inactiveMinutes = Math.floor(inactiveMs / (60 * 1000));
-  const warningDelay = formatDuration("en", warningIntervalMinutes);
+  const warningDelay = formatTimePeriod("en", warningIntervalMinutes);
 
   for (const recipient of recipients) {
-    const duration = formatDuration(recipient.lang, inactiveMinutes);
+    const duration = formatTimePeriod(recipient.lang, inactiveMinutes);
     const repeatInterval =
       recipient.lang === "en"
         ? warningDelay
-        : formatDuration(recipient.lang, warningIntervalMinutes);
+        : formatTimePeriod(recipient.lang, warningIntervalMinutes);
     try {
       await bot.telegram.sendMessage(
         recipient.id,
@@ -163,7 +153,7 @@ async function checkInactivity(bot: Telegraf<any>) {
 
   const superRecipients = await getSuperAdminRecipients();
   for (const recipient of superRecipients) {
-    const duration = formatDuration(recipient.lang, inactiveMinutes);
+    const duration = formatTimePeriod(recipient.lang, inactiveMinutes);
     try {
       await bot.telegram.sendMessage(
         recipient.id,

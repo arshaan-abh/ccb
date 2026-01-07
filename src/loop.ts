@@ -4,6 +4,7 @@ import { kickUserFromChannel } from "./bot/helpers/kickUserFromChannel";
 import { getTeamList, TGetTeamListRes } from "./services/getTeamList";
 import { isLbankReqSuccessfull } from "./bot/helpers/isLbankReqSuccessfull";
 import { i18n } from "./locale";
+import { formatTimePeriod } from "./utils/formatTimePeriod";
 
 // Sync balances from API
 export async function syncBalances(bot: Telegraf<any>) {
@@ -123,17 +124,6 @@ export async function syncBalances(bot: Telegraf<any>) {
         : 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    const formatDuration = (lang: string, minutes: number): string => {
-      const safeMinutes = Number.isFinite(minutes) && minutes > 0 ? minutes : 1440;
-      if (safeMinutes % 60 === 0) {
-        const hours = safeMinutes / 60;
-        if (lang === "fa") return `${hours} ساعت`;
-        return `${hours} hour${hours === 1 ? "" : "s"}`;
-      }
-      if (lang === "fa") return `${safeMinutes} دقیقه`;
-      return `${safeMinutes} minute${safeMinutes === 1 ? "" : "s"}`;
-    };
-
     for (const user of users) {
       try {
         const totalBalance = db.getTotalBalance(user);
@@ -152,7 +142,7 @@ export async function syncBalances(bot: Telegraf<any>) {
           if (timeSinceLastWarning >= warnIntervalMs) {
             try {
               const lang = user.lang || "en";
-              const removalDelay = formatDuration(
+              const removalDelay = formatTimePeriod(
                 lang,
                 kickAfterWarningMinutes,
               );

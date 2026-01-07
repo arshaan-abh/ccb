@@ -5,6 +5,7 @@ import { createInviteLink } from "../helpers/createInviteLink";
 import { Markup, Telegraf } from "telegraf";
 import { isChannelMember } from "../helpers/isChannelMember";
 import { mainMenuKeyboard } from "../../utils/main-menu-keyboard";
+import { formatTimePeriod } from "../../utils/formatTimePeriod";
 
 export async function startHandler(
   ctx: BotContext,
@@ -49,7 +50,11 @@ export async function startHandler(
     const threshold = await db.getThreshold();
     if (db.getTotalBalance(ctx.user) >= threshold) {
       const link = await createInviteLink(bot, process.env.CHANNEL_ID!);
-      await ctx.reply(i18n(lang, "inviteSent", link), mainMenuKeyboard(lang));
+      const inviteExpireMinutes = 1;
+      await ctx.reply(
+        i18n(lang, "inviteSent", link, formatTimePeriod(lang, inviteExpireMinutes)),
+        mainMenuKeyboard(lang),
+      );
     } else {
       await ctx.reply(
         i18n(lang, "belowThreshold", threshold, db.getTotalBalance(ctx.user)),

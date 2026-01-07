@@ -64,7 +64,7 @@ Verification complete! Your private invitation link:
 
 🔗 {0}
 
-⚠️ This link expires in 1 minute
+⚠️ This link expires in {1}
   `,
 
   approved: "🎉 Welcome aboard! You’ve been approved to join the channel 🚀",
@@ -411,7 +411,7 @@ export const messages_fa: Record<keyof typeof messages_en, string> = {
 
 🔗 {0}
 
-⚠️ این لینک پس از 1دقیقه منقضی می‌شود
+⚠️ این لینک پس از {1} دقیقه منقضی می‌شود
   `,
 
   alreadyJoined: `
