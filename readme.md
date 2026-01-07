@@ -18,7 +18,7 @@ cd lbank-vip
 ./start
 ```
 
-- Make sure you have **tmux** and **npm** installed.
+- Make sure you have **npm** installed.
 
 # How to Use
 

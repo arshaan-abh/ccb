@@ -24,12 +24,15 @@ if [ -z "$NAME" ]; then
 fi
 
 ENV_FILE=".env.$NAME"
-LOG_DIR="logs"
-LOG_TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
-LOG_FILE="$LOG_DIR/${NAME}-${LOG_TIMESTAMP}.log"
+SERVICE_NAME="ccb"
+UNIT_FILE="/etc/systemd/system/${SERVICE_NAME}@.service"
+WORK_DIR="$(pwd)"
+NODE_BIN="$(command -v node)"
 
-# Create logs directory if missing
-mkdir -p "$LOG_DIR"
+if [ -z "$NODE_BIN" ]; then
+  echo "node is not installed or not in PATH"
+  exit 1
+fi
 
 # Handle .env file existence
 if [ -f "$ENV_FILE" ]; then
@@ -156,27 +159,34 @@ EOF
   chmod 600 "$ENV_FILE"
 fi
 
-# Check if tmux is available
-if ! command -v tmux &> /dev/null; then
-  echo "tmux is not installed"
-  exit 1
-fi
+cat > "$UNIT_FILE" <<EOF
+[Unit]
+Description=CCB Bot Instance (%i)
+After=network.target
 
-# Kill existing session if it exists
-if tmux has-session -t "$NAME" 2>/dev/null; then
-  echo "Killing existing session '$NAME'..."
-  tmux kill-session -t "$NAME"
-fi
+[Service]
+Type=simple
+WorkingDirectory=$WORK_DIR
+EnvironmentFile=$WORK_DIR/.env.%i
+ExecStart=$NODE_BIN $WORK_DIR/dist/index.js
+Restart=always
+RestartSec=5
+User=root
+Group=root
 
-# Start new detached tmux session with output logged
-echo "Starting tmux session '$NAME'..."
-tmux new-session -d -s "$NAME" "export \$(xargs < $ENV_FILE); npm run start 2>&1 | tee $LOG_FILE; echo 'Process exited. Check logs and retry with same name if needed.' | tee -a $LOG_FILE"
+[Install]
+WantedBy=multi-user.target
+EOF
 
-echo "Tmux session '$NAME' started and detached."
-echo "Logs are being written to $LOG_FILE"
+systemctl daemon-reload
+systemctl enable "${SERVICE_NAME}@${NAME}" >/dev/null 2>&1
+systemctl restart "${SERVICE_NAME}@${NAME}"
+
+echo "Systemd service '${SERVICE_NAME}@${NAME}' restarted."
+echo "Logs are available via journald."
 echo ""
-echo "To monitor: tmux attach -t $NAME"
-echo "To view logs: tail -f $LOG_FILE"
-echo "To stop:      tmux kill-session -t $NAME"
+echo "To monitor: systemctl status ${SERVICE_NAME}@${NAME}"
+echo "To view logs: journalctl -u ${SERVICE_NAME}@${NAME} -f"
+echo "To stop:      systemctl stop ${SERVICE_NAME}@${NAME}"
 echo ""
 echo "If the process exits with problems, retry with: $0 $NAME"
